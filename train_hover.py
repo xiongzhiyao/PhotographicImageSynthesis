@@ -242,16 +242,20 @@ if is_training:
         target.close()
         saver.save(sess,"result_256p/model.ckpt")
         saver.save(sess,"result_256p/%04d/model.ckpt"%epoch)
-        for ind in range(5000,5010):
-            d = data[ind]
-            image_id = d['camera']
-            image_path = os.path.join('/home/ec2-user/CRN/hover_data/image', '{}.jpg'.format(image_id))
-            mask_path = os.path.join('/home/ec2-user/CRN/hover_data/mask', '{}.jpg'.format(image_id))
-            occlusion_path = os.path.join('/home/ec2-user/CRN/hover_data/occlusion', '{}.npz'.format(image_id))
-            semantic = get_semantic_map(mask_path, occlusion_path)
-            output=sess.run(generator,feed_dict={label:np.concatenate((semantic,np.expand_dims(1-np.sum(semantic,axis=3),axis=3)),axis=3)})
-            output=np.minimum(np.maximum(output,0.0),255.0)
-            upper=np.concatenate((output[0,:,:,:],output[1,:,:,:],output[2,:,:,:]),axis=1)
-            middle=np.concatenate((output[3,:,:,:],output[4,:,:,:],output[5,:,:,:]),axis=1)
-            bottom=np.concatenate((output[6,:,:,:],output[7,:,:,:],output[8,:,:,:]),axis=1)
-            scipy.misc.toimage(np.concatenate((upper,middle,bottom),axis=0),cmin=0,cmax=255).save("result_256p/%04d/%06d_output.jpg"%(epoch,ind))
+
+        try:
+            for ind in range(5000,5010):
+                d = data[ind]
+                image_id = d['camera']
+                image_path = os.path.join('/home/ec2-user/CRN/hover_data/image', '{}.jpg'.format(image_id))
+                mask_path = os.path.join('/home/ec2-user/CRN/hover_data/mask', '{}.jpg'.format(image_id))
+                occlusion_path = os.path.join('/home/ec2-user/CRN/hover_data/occlusion', '{}.npz'.format(image_id))
+                semantic = get_semantic_map(mask_path, occlusion_path)
+                output=sess.run(generator,feed_dict={label:np.concatenate((semantic,np.expand_dims(1-np.sum(semantic,axis=3),axis=3)),axis=3)})
+                output=np.minimum(np.maximum(output,0.0),255.0)
+                upper=np.concatenate((output[0,:,:,:],output[1,:,:,:],output[2,:,:,:]),axis=1)
+                middle=np.concatenate((output[3,:,:,:],output[4,:,:,:],output[5,:,:,:]),axis=1)
+                bottom=np.concatenate((output[6,:,:,:],output[7,:,:,:],output[8,:,:,:]),axis=1)
+                scipy.misc.toimage(np.concatenate((upper,middle,bottom),axis=0),cmin=0,cmax=255).save("result_256p/%04d/%06d_output.jpg"%(epoch,ind))
+        except Exception as e:
+            print(e)
