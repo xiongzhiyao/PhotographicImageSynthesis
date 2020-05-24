@@ -96,15 +96,16 @@ for d in raw_data:
     pair = json.loads(d)
     data.append(pair)
 
-for d in data:
-    image_id = d['camera']
-    image_path = os.path.join('/home/ec2-user/CRN/hover_data/image', '{}.jpg'.format(image_id))
-    mask_path = os.path.join('/home/ec2-user/CRN/hover_data/mask', '{}.jpg'.format(image_id))
-    occlusion_path = os.path.join('/home/ec2-user/CRN/hover_data/occlusion', '{}.npz'.format(image_id))
-    img = np.array(Image.open(image_path).resize((shape[1], shape[0]), resample = PIL.Image.NEAREST))
+# for d in data:
+#     image_id = d['camera']
+#     image_path = os.path.join('/home/ec2-user/CRN/hover_data/image', '{}.jpg'.format(image_id))
+#     mask_path = os.path.join('/home/ec2-user/CRN/hover_data/mask', '{}.jpg'.format(image_id))
+#     occlusion_path = os.path.join('/home/ec2-user/CRN/hover_data/occlusion', '{}.npz'.format(image_id))
+#     img = np.array(Image.open(image_path).resize((shape[1], shape[0]), resample = PIL.Image.NEAREST))
+#     get_semantic_map(mask_path, occlusion_path)
+#     np.expand_dims(np.float32(img),axis=0)#training image
+#     print('here')
 
-get_semantic_map(mask_path, occlusion_path)
-np.expand_dims(np.float32(img),axis=0)#training image
 
 #========================================================================================
 def lrelu(x):
