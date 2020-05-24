@@ -2,3 +2,6 @@
 *.meta
 *.data-00000-of-00001
 result_256p/final
+data/hover/image
+data/hover/mask
+data/hover_small
