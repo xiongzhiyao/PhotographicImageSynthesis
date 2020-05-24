@@ -205,38 +205,43 @@ sess.run(tf.global_variables_initializer())
 #     saver.restore(sess,ckpt.model_checkpoint_path)
 
 if is_training:
-    g_loss=np.zeros(5000,dtype=float)
-    input_images=[None]*5000
-    label_images=[None]*5000
+    data_len = len(data)
+    g_loss=np.zeros(data_len,dtype=float)
+    input_images=[None]*data_len
+    label_images=[None]*data_len
     for epoch in range(1,201):
         if os.path.isdir("result_256p/%04d"%epoch):
             continue
         cnt=0
-        for ind in np.random.permutation(5000)+1:
+        for ind in np.random.permutation(data_len) - 10:
             st=time.time()
             cnt+=1
-            if input_images[ind] is None:
-                
-                d = data[ind]
-                image_id = d['camera']
-                image_path = os.path.join('/home/ec2-user/CRN/hover_data/image', '{}.jpg'.format(image_id))
-                mask_path = os.path.join('/home/ec2-user/CRN/hover_data/mask', '{}.jpg'.format(image_id))
-                occlusion_path = os.path.join('/home/ec2-user/CRN/hover_data/occlusion', '{}.npz'.format(image_id))
-                img = np.array(Image.open(image_path).resize((shape[1], shape[0]), resample = PIL.Image.NEAREST))
 
-                label_images[ind] = get_semantic_map(mask_path, occlusion_path)
-                input_images[ind]=np.expand_dims(np.float32(img),axis=0)#training image
+            try:
+                if input_images[ind] is None:
+                    
+                    d = data[ind]
+                    image_id = d['camera']
+                    image_path = os.path.join('/home/ec2-user/CRN/hover_data/image', '{}.jpg'.format(image_id))
+                    mask_path = os.path.join('/home/ec2-user/CRN/hover_data/mask', '{}.jpg'.format(image_id))
+                    occlusion_path = os.path.join('/home/ec2-user/CRN/hover_data/occlusion', '{}.npz'.format(image_id))
+                    img = np.array(Image.open(image_path).resize((shape[1], shape[0]), resample = PIL.Image.NEAREST))
 
-            _,G_current,l0,l1,l2,l3,l4,l5=sess.run([G_opt,G_loss,p0,p1,p2,p3,p4,p5],feed_dict={label:np.concatenate((label_images[ind],np.expand_dims(1-np.sum(label_images[ind],axis=3),axis=3)),axis=3),real_image:input_images[ind],lr:1e-4})#may try lr:min(1e-6*np.power(1.1,epoch-1),1e-4 if epoch>100 else 1e-3) in case lr:1e-4 is not good
-            g_loss[ind]=G_current
-            print("%d %d %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f"%(epoch,cnt,np.mean(g_loss[np.where(g_loss)]),np.mean(l0),np.mean(l1),np.mean(l2),np.mean(l3),np.mean(l4),np.mean(l5),time.time()-st))
+                    label_images[ind] = get_semantic_map(mask_path, occlusion_path)
+                    input_images[ind]=np.expand_dims(np.float32(img),axis=0)#training image
+
+                _,G_current,l0,l1,l2,l3,l4,l5=sess.run([G_opt,G_loss,p0,p1,p2,p3,p4,p5],feed_dict={label:np.concatenate((label_images[ind],np.expand_dims(1-np.sum(label_images[ind],axis=3),axis=3)),axis=3),real_image:input_images[ind],lr:1e-4})#may try lr:min(1e-6*np.power(1.1,epoch-1),1e-4 if epoch>100 else 1e-3) in case lr:1e-4 is not good
+                g_loss[ind]=G_current
+                print("%d %d %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f"%(epoch,cnt,np.mean(g_loss[np.where(g_loss)]),np.mean(l0),np.mean(l1),np.mean(l2),np.mean(l3),np.mean(l4),np.mean(l5),time.time()-st))
+            except Exception as e:
+                print(e)
+
         os.makedirs("result_256p/%04d"%epoch)
         target=open("result_256p/%04d/score.txt"%epoch,'w')
         target.write("%f"%np.mean(g_loss[np.where(g_loss)]))
         target.close()
         saver.save(sess,"result_256p/model.ckpt")
-        if epoch%20==0:
-            saver.save(sess,"result_256p/%04d/model.ckpt"%epoch)
+        saver.save(sess,"result_256p/%04d/model.ckpt"%epoch)
         for ind in range(5000,5010):
             d = data[ind]
             image_id = d['camera']
